@@ -34,7 +34,10 @@ sf::Vector2f angle2direction(float angle)
 bool isOut( bullet b)
 {
     if(b.position.x <= 0 || b.position.y <= 0 || b.position.y >= 800 || b.position.x >= 1442)
+    {
+        //std::cout << "Bullet out!" << std::endl;
         return true;
+    }
     return false;
 }
 
@@ -87,34 +90,36 @@ int main()
 
         renderTimer.restart(); ///< Restart timer;
 
+        ///< Update all the asets. ////////////////////////////////////////////////////////
         /// Move the tank.
+        float _velocity = 0;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) _angle -= (1 *_fpsCoef*50) ;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) _angle += (1*_fpsCoef*50);
-
-        float _velocity = 0;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) _velocity += (1.0*_fpsCoef*50);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) _velocity -= (1.0*_fpsCoef*50);
-
         tank_one.direction = angle2direction(_angle);
         tank_one.position = tank_one.position + (tank_one.direction * _velocity);
 
+        ///< update the bullet position
         for (auto& shot : _bullets)
         {
             shot.position = shot.position + (shot.direction * shot.velocity * _fpsCoef);
         }
-        std::remove_if(_bullets.begin(), _bullets.end(), isOut);
-
-        /// Render Game
+        ///< check if any bullet is out of scope and remove it if so.
+        auto new_end = std::remove_if(_bullets.begin(), _bullets.end(), isOut);
+        _bullets.erase(new_end,  _bullets.end());
+        /// Render Game ////////////////////////////////////////////////////////////////
         // Clear screen
         window.clear();
-        // Draw the sprite
+        ///< render the player.
         tank_one.sprite.setRotation(_angle);
         tank_one.sprite.setPosition(tank_one.position);
         window.draw(tank_one.sprite);
+        
         // Draw the string
         //window.draw(text);
         // Update the window
-        
+        ///< Render all bullets.
         for (auto& shot : _bullets)
         {
             shot.sprite.setRotation(shot.angle);
