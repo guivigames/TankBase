@@ -5,7 +5,7 @@
 #include <string>
 #include <SFML/Graphics.hpp>
 #include "TextureManager.h"
-
+#include <cmath>
 TextureManager g_textureManager;
 
 struct player
@@ -16,6 +16,12 @@ struct player
     sf::Sprite sprite;
 };
 
+sf::Vector2f angle2direction(float angle)
+{
+    sf::Vector2f _direction{ sin(-angle*M_PI/180), cos(-angle*M_PI/180)};
+    return _direction;
+}
+
 int main()
 {   
     // Create the main window
@@ -23,12 +29,13 @@ int main()
     printf("Window created\r\n");
     TextureManager::GetTexture("allSprites_default.png"); 
     printf("Sprite loaded\r\n");
-    float angle = 0.0;
+    float _angle = 0.0;
     sf::Clock renderTimer;
 
     player tank_one;
+    tank_one.position = {100, 100};
     tank_one.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
-    tank_one.sprite.setPosition(100, 100);
+    tank_one.sprite.setPosition(tank_one.position);
     tank_one.sprite.setOrigin( sf::Vector2f(21, 23));
 
     while (window.isOpen())
@@ -47,18 +54,29 @@ int main()
 
         if (renderTimer.getElapsedTime().asMilliseconds() > 40)
         {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) angle += 1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) angle -= 1;
+            renderTimer.restart(); ///< Restart timer;
 
-            renderTimer.restart();
+            /// Move the tank.
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) _angle -= 1;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) _angle += 1;
+
+            float _velocity = 0;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) _velocity += 1.0;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) _velocity -= 1.0;
+
+            tank_one.direction = angle2direction(_angle);
+            tank_one.position = tank_one.position + (tank_one.direction * _velocity);
+
+            /// Render Game
             // Clear screen
             window.clear();
             // Draw the sprite
-            window.draw(sprite);
+            window.draw(tank_one.sprite);
             // Draw the string
             //window.draw(text);
             // Update the window
-            sprite.setRotation(angle);
+            tank_one.sprite.setRotation(_angle);
+            tank_one.sprite.setPosition(tank_one.position);
             //angle += 0.1;
             //if(angle >= 360)
             //    angle = 0.0;
