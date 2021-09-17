@@ -6,6 +6,10 @@
 #include <SFML/Graphics.hpp>
 #include "TextureManager.h"
 #include <cmath>
+
+const int WIDTH     = 1442;
+const int HEIGHT    = 800;
+
 TextureManager g_textureManager;
 
 struct player
@@ -33,7 +37,7 @@ sf::Vector2f angle2direction(float angle)
 
 bool isOut( bullet b)
 {
-    if(b.position.x <= 0 || b.position.y <= 0 || b.position.y >= 800 || b.position.x >= 1442)
+    if(b.position.x <= 0 || b.position.y <= 0 || b.position.y >= HEIGHT || b.position.x >= WIDTH)
     {
         //std::cout << "Bullet out!" << std::endl;
         return true;
@@ -44,7 +48,7 @@ bool isOut( bullet b)
 int main()
 {   
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode( 1422, 800), "SFML window");
+    sf::RenderWindow window(sf::VideoMode( WIDTH, HEIGHT), "SFML window");
     printf("Window created\r\n");
     TextureManager::GetTexture("allSprites_default.png"); 
     printf("Sprite loaded\r\n");
