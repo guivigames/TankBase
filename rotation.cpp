@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include "TextureManager.h"
 #include <cmath>
+#include "collisions.h"
 
 const int WIDTH     = 1442;
 const int HEIGHT    = 800;
@@ -56,11 +57,21 @@ int main()
     sf::Clock renderTimer;
     sf::Clock _fpsClock;
     player tank_one;
+    std::vector<player> tank_bad;
+
     std::vector<bullet> _bullets;
+
     tank_one.position = {100, 100};
     tank_one.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
     tank_one.sprite.setPosition(tank_one.position);
     tank_one.sprite.setOrigin( sf::Vector2f(21, 23));
+
+    player bad;
+    bad.position = {400, 400};
+    bad.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
+    bad.sprite.setPosition(bad.position);
+    bad.sprite.setOrigin( sf::Vector2f(21, 23));
+    tank_bad.push_back(bad);
 
     while (window.isOpen())
     {
@@ -104,22 +115,55 @@ int main()
         tank_one.direction = angle2direction(_angle);
         tank_one.position = tank_one.position + (tank_one.direction * _velocity);
 
+
         ///< update the bullet position
-        for (auto& shot : _bullets)
+        //for (auto shot = _bullets.begin(); shot != _bullets.end(); shot++)
+        for (int i = 0; i < _bullets.size(); i++)
         {
-            shot.position = shot.position + (shot.direction * shot.velocity * _fpsCoef);
+            //(*shot).position = (*shot).position + ((*shot).direction * (*shot).velocity * _fpsCoef);
+            _bullets[i].position = _bullets[i].position + (_bullets[i].direction * _bullets[i].velocity * _fpsCoef);
+            sf::FloatRect rfShot = _bullets[i].sprite.getGlobalBounds();
+            std::vector<sf::Vector2f> vect1;
+            vect1.push_back( sf::Vector2f{rfShot.left, rfShot.top});
+            vect1.push_back( sf::Vector2f{rfShot.left, rfShot.top + rfShot.height});
+            vect1.push_back( sf::Vector2f{rfShot.left + rfShot.width, rfShot.top + rfShot.height});
+            vect1.push_back( sf::Vector2f{rfShot.left + rfShot.width, rfShot.top});
+            for (auto t = tank_bad.begin(); t != tank_bad.end(); /*t++*/){
+                std::vector<sf::Vector2f> vect2;
+                sf::FloatRect frTank = (*t).sprite.getGlobalBounds();
+                vect2.push_back( sf::Vector2f{frTank.left, frTank.top});
+                vect2.push_back( sf::Vector2f{frTank.left, frTank.top + frTank.height});
+                vect2.push_back( sf::Vector2f{frTank.left + frTank.width, frTank.top + frTank.height});
+                vect2.push_back( sf::Vector2f{frTank.left + frTank.width, frTank.top});
+                if (polyPoly(vect1, vect2))
+                {
+                    _bullets.erase(_bullets.begin() + i);
+                    t = tank_bad.erase(t);          
+                }
+                else {
+                    t++;
+                }
+            }
         }
+
         ///< check if any bullet is out of scope and remove it if so.
         auto new_end = std::remove_if(_bullets.begin(), _bullets.end(), isOut);
         _bullets.erase(new_end,  _bullets.end());
         /// Render Game ////////////////////////////////////////////////////////////////
         // Clear screen
         window.clear();
+
         ///< render the player.
         tank_one.sprite.setRotation(_angle);
         tank_one.sprite.setPosition(tank_one.position);
         window.draw(tank_one.sprite);
         
+        ///< Render the bad boys.
+        for (auto& t : tank_bad){
+            t.sprite.setPosition(t.position);
+            window.draw(t.sprite);
+        }
+
         // Draw the string
         //window.draw(text);
         // Update the window
