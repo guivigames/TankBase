@@ -8,6 +8,10 @@
 #include <cmath>
 #include "collisions.h"
 
+#ifndef M_PI
+const float M_PI = 3.1415;
+#endif
+
 const int WIDTH     = 1442;
 const int HEIGHT    = 800;
 
@@ -46,8 +50,20 @@ bool isOut( bullet b)
     return false;
 }
 
+void addtank(std::vector<player>& badlist)
+{
+    player bad;
+    bad.position = {    static_cast<float>(400 + static_cast<int>(rand()% ((int)WIDTH-500))), 
+                        static_cast<float>(400 + static_cast<int>(rand()% ((int)HEIGHT-500)))};
+    bad.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
+    bad.sprite.setPosition(bad.position);
+    bad.sprite.setOrigin( sf::Vector2f(21, 23));
+    badlist.push_back(bad);
+}
+
 int main()
 {   
+    srand( time(nullptr));
     // Create the main window
     sf::RenderWindow window(sf::VideoMode( WIDTH, HEIGHT), "SFML window");
     printf("Window created\r\n");
@@ -58,20 +74,13 @@ int main()
     sf::Clock _fpsClock;
     player tank_one;
     std::vector<player> tank_bad;
-
     std::vector<bullet> _bullets;
 
+    addtank(tank_bad);
     tank_one.position = {100, 100};
     tank_one.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
     tank_one.sprite.setPosition(tank_one.position);
     tank_one.sprite.setOrigin( sf::Vector2f(21, 23));
-
-    player bad;
-    bad.position = {400, 400};
-    bad.sprite = TextureManager::GetSprite("allSprites_default.png", "tankBody_green_outline.png");
-    bad.sprite.setPosition(bad.position);
-    bad.sprite.setOrigin( sf::Vector2f(21, 23));
-    tank_bad.push_back(bad);
 
     while (window.isOpen())
     {
@@ -118,6 +127,8 @@ int main()
 
         ///< update the bullet position
         //for (auto shot = _bullets.begin(); shot != _bullets.end(); shot++)
+
+        bool _killed = false;
         for (int i = 0; i < _bullets.size(); i++)
         {
             //(*shot).position = (*shot).position + ((*shot).direction * (*shot).velocity * _fpsCoef);
@@ -138,14 +149,16 @@ int main()
                 if (polyPoly(vect1, vect2))
                 {
                     _bullets.erase(_bullets.begin() + i);
-                    t = tank_bad.erase(t);          
+                    t = tank_bad.erase(t);
+                    _killed = true;          
                 }
                 else {
                     t++;
                 }
             }
         }
-
+        if (_killed)
+            addtank(tank_bad);
         ///< check if any bullet is out of scope and remove it if so.
         auto new_end = std::remove_if(_bullets.begin(), _bullets.end(), isOut);
         _bullets.erase(new_end,  _bullets.end());
